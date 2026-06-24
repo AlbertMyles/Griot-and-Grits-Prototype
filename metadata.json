@@ -1,0 +1,5 @@
+{
+  "name": "Griot & Grits",
+  "description": "An oral history platform for preserving cultural narratives through multimedia processing and AI-driven analysis.",
+  "requestFramePermissions": ["microphone"]
+}

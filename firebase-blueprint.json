@@ -1,0 +1,60 @@
+{
+  "entities": {
+    "Media": {
+      "title": "Media",
+      "description": "An oral history media record",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "filename": { "type": "string" },
+        "thumbnail": { "type": "string" },
+        "duration": { "type": "string" },
+        "resolution": { "type": "string" },
+        "frame_rate": { "type": "string" },
+        "transcript": { "type": "string" },
+        "summary": { "type": "string" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "authorId": { "type": "string" }
+      },
+      "required": ["title", "transcript", "summary", "authorId"]
+    },
+    "Entity": {
+      "title": "Entity",
+      "description": "A cultural entity extracted from a media record",
+      "type": "object",
+      "properties": {
+        "media_id": { "type": "string" },
+        "type": { "type": "string", "enum": ["People", "Places", "Events", "Movements"] },
+        "name": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "required": ["media_id", "type", "name"]
+    },
+    "User": {
+      "title": "User",
+      "description": "A user of the platform",
+      "type": "object",
+      "properties": {
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "user"] }
+      },
+      "required": ["email"]
+    }
+  },
+  "firestore": {
+    "/media/{mediaId}": {
+      "schema": "Media",
+      "description": "Collection of oral histories"
+    },
+    "/entities/{entityId}": {
+      "schema": "Entity",
+      "description": "Collection of extracted cultural entities"
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    }
+  }
+}

@@ -1,0 +1,71 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.authorId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "abmyles98@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidMedia(data) {
+      return data.keys().hasAll(['title', 'transcript', 'summary', 'authorId']) &&
+             data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
+             data.transcript is string && data.transcript.size() > 0 &&
+             data.summary is string && data.summary.size() > 0 &&
+             data.authorId == request.auth.uid;
+    }
+
+    function isValidEntity(data) {
+      return data.keys().hasAll(['media_id', 'type', 'name']) &&
+             data.media_id is string &&
+             data.type in ['People', 'Places', 'Events', 'Movements'] &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['email']) &&
+             data.email is string &&
+             (!('role' in data) || data.role in ['admin', 'user']);
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data) && (!('role' in request.resource.data) || request.resource.data.role == 'user');
+      allow update: if isOwner(userId) && isValidUser(request.resource.data) && (request.resource.data.role == resource.data.role || isAdmin());
+    }
+
+    match /media/{mediaId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidMedia(request.resource.data);
+      allow update: if (isDocOwner() || isAdmin()) && isValidMedia(request.resource.data);
+      allow delete: if (isDocOwner() || isAdmin());
+    }
+
+    match /entities/{entityId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidEntity(request.resource.data);
+      allow update: if isAdmin() && isValidEntity(request.resource.data);
+      allow delete: if isAdmin();
+    }
+  }
+}
